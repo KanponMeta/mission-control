@@ -8,6 +8,27 @@
 #   bash install.sh [--docker|--local] [--port PORT] [--data-dir DIR]
 #
 # Installs Mission Control and optionally repairs/configures OpenClaw.
+#
+# ── 流程概览 ──────────────────────────────────────────────────────────────────
+# 1. 解析参数       -- 支持 --docker / --local / --port / --data-dir /
+#                      --dir / --skip-openclaw
+# 2. 检测环境       -- 检测 OS (Linux/macOS) 和架构 (x64/arm64)；
+#                      检查 Docker / Node.js (>=20) 可用性；
+#                      未指定部署模式时优先选 Docker，否则选 local
+# 3. 获取源码       -- 目标目录已是 Git 仓库则 fetch 并 checkout 最新 tag；
+#                      否则从 GitHub clone；当前目录已是本项目则跳过
+# 4. 生成 .env      -- 调用 scripts/generate-env.sh 生成安全密钥；
+#                      自动写入端口、OPENCLAW_HOME；
+#                      Docker 模式下额外写入 OPENCLAW_GATEWAY_HOST
+# 5. 部署
+#    Docker 模式    -- docker compose up -d --build，等待健康检查
+#    Local  模式    -- pnpm install → pnpm build → 后台 pnpm start；
+#                      Linux 上可选创建 systemd 服务
+# 6. OpenClaw 巡检  -- 检查 openclaw/clawdbot 二进制；清理过期 PID 文件
+#                      和 30 天前的旧日志；统计 agent workspace 数量；
+#                      测试 gateway 端口 (默认 18789) 是否可达
+# 7. 打印摘要       -- 显示访问地址、数据目录及管理命令
+# ─────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
 

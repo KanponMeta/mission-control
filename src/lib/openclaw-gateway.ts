@@ -1,3 +1,7 @@
+/**
+ * OpenClaw Gateway RPC client.
+ * Used by OpenClawBackend in agent-backend.ts for agents configured with backend: 'openclaw'.
+ */
 import { runOpenClaw } from './command'
 
 export function parseGatewayJsonOutput(raw: string): unknown | null {

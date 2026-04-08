@@ -1567,7 +1567,28 @@
     "justNow": "Только что",
     "minutesAgo": "{count}м назад",
     "hoursAgo": "{count}ч назад",
-    "daysAgo": "{count}д назад"
+    "daysAgo": "{count}д назад",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "Новый Claude Code Agent",
+      "subtitle": "На базе Claude Agent SDK",
+      "namePlaceholder": "напр.: claude-dev, code-reviewer",
+      "rolePlaceholder": "напр.: разработчик, ревьюер, исследователь",
+      "modelTier": "Уровень модели",
+      "maxTurns": "Макс. ходов",
+      "maxTurnsHint": "1-200 ходов за вызов",
+      "budget": "Лимит бюджета",
+      "budgetHint": "Макс. стоимость за вызов",
+      "permissionMode": "Режим разрешений",
+      "allowedTools": "Разрешённые инструменты",
+      "allowedToolsHint": "Имена инструментов через запятую",
+      "systemPrompt": "Системный промпт (необязательно)",
+      "systemPromptPlaceholder": "Пользовательские инструкции для этого агента...",
+      "summary": "Сводка конфигурации",
+      "turns": "ходов",
+      "creating": "Создание...",
+      "create": "Создать Claude Agent"
+    }
   },
   "multiGateway": {
     "title": "Менеджер шлюзов",
@@ -1840,7 +1861,32 @@
     "noAgents": "No agents registered",
     "noAgentsHint": "Sync from config or create your first agent to get started.",
     "wake": "Wake",
-    "spawn": "Spawn"
+    "spawn": "Spawn",
+    "cancel": "Отмена",
+    "failedToCreate": "Не удалось создать агента",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "Новый Claude Code Agent",
+      "subtitle": "На базе Claude Agent SDK",
+      "name": "Имя",
+      "namePlaceholder": "напр.: claude-dev, code-reviewer",
+      "role": "Роль",
+      "rolePlaceholder": "напр.: разработчик, ревьюер, исследователь",
+      "modelTier": "Уровень модели",
+      "maxTurns": "Макс. ходов",
+      "maxTurnsHint": "1-200 ходов за вызов",
+      "budget": "Лимит бюджета",
+      "budgetHint": "Макс. стоимость за вызов",
+      "permissionMode": "Режим разрешений",
+      "allowedTools": "Разрешённые инструменты",
+      "allowedToolsHint": "Имена через запятую",
+      "systemPrompt": "Системный промпт (необязательно)",
+      "systemPromptPlaceholder": "Пользовательские инструкции для агента...",
+      "summary": "Сводка конфигурации",
+      "turns": "ходов",
+      "creating": "Создание...",
+      "create": "Создать Claude Agent"
+    }
   },
   "orchestration": {
     "tabCommand": "Команда",

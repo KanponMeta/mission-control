@@ -2949,3 +2949,262 @@ export function ModelsTab({ agent }: { agent: Agent }) {
     </div>
   )
 }
+
+// ─── Claude Code Agent SDK Modal ────────────────────────
+const CLAUDE_MODEL_TIERS = [
+  { value: 'light', label: 'Haiku', desc: 'claude-haiku-4-5', color: 'text-green-400' },
+  { value: 'default', label: 'Sonnet', desc: 'claude-sonnet-4-6', color: 'text-blue-400' },
+  { value: 'heavy', label: 'Opus', desc: 'claude-opus-4-6', color: 'text-purple-400' },
+] as const
+
+const CLAUDE_PERMISSION_MODES = [
+  { value: 'acceptEdits', label: 'Accept Edits' },
+  { value: 'plan', label: 'Plan Only' },
+  { value: 'bypassPermissions', label: 'Bypass Permissions' },
+] as const
+
+export function CreateClaudeAgentModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void
+  onCreated: () => void
+}) {
+  const t = useTranslations('agentSquadPhase3')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [formData, setFormData] = useState({
+    name: '',
+    role: '',
+    modelTier: 'default' as 'light' | 'default' | 'heavy',
+    maxTurns: 30,
+    maxBudgetUsd: 5.0,
+    permissionMode: 'acceptEdits',
+    systemPrompt: '',
+    allowedTools: 'Read,Edit,Write,Bash,Glob,Grep',
+  })
+
+  const selectedTier = CLAUDE_MODEL_TIERS.find(t => t.value === formData.modelTier)!
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setSubmitting(true)
+
+    try {
+      const tools = formData.allowedTools
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+
+      const response = await fetch('/api/agents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          role: formData.role || 'Claude Code Agent',
+          soul_content: formData.systemPrompt || undefined,
+          config: {
+            backend: 'agent-sdk',
+            modelTier: formData.modelTier,
+            maxTurns: formData.maxTurns,
+            maxBudgetUsd: formData.maxBudgetUsd,
+            permissionMode: formData.permissionMode,
+            allowedTools: tools,
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || t('failedToCreate'))
+      }
+
+      onCreated()
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('failedToCreate'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const update = <K extends keyof typeof formData>(key: K, value: (typeof formData)[K]) =>
+    setFormData(prev => ({ ...prev, [key]: value }))
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-card rounded-xl border border-border max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <form onSubmit={handleSubmit} className="p-6">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-lg">
+              C
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-foreground">{t('claudeAgent.title')}</h3>
+              <p className="text-sm text-muted-foreground">{t('claudeAgent.subtitle')}</p>
+            </div>
+            <Button onClick={onClose} variant="ghost" size="icon-sm" className="text-xl">x</Button>
+          </div>
+
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-lg mb-4">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-5">
+            {/* Name */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">{t('claudeAgent.name')}</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => update('name', e.target.value)}
+                className="w-full bg-secondary text-foreground rounded-lg px-3 py-2 border border-border focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                placeholder={t('claudeAgent.namePlaceholder')}
+                required
+              />
+            </div>
+
+            {/* Role */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">{t('claudeAgent.role')}</label>
+              <input
+                type="text"
+                value={formData.role}
+                onChange={(e) => update('role', e.target.value)}
+                className="w-full bg-secondary text-foreground rounded-lg px-3 py-2 border border-border focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                placeholder={t('claudeAgent.rolePlaceholder')}
+              />
+            </div>
+
+            {/* Model Tier */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">{t('claudeAgent.modelTier')}</label>
+              <div className="grid grid-cols-3 gap-2">
+                {CLAUDE_MODEL_TIERS.map(tier => (
+                  <button
+                    key={tier.value}
+                    type="button"
+                    onClick={() => update('modelTier', tier.value)}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      formData.modelTier === tier.value
+                        ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/30'
+                        : 'border-border bg-secondary hover:border-muted-foreground/30'
+                    }`}
+                  >
+                    <div className={`font-semibold ${tier.color}`}>{tier.label}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{tier.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Max Turns & Budget */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">{t('claudeAgent.maxTurns')}</label>
+                <input
+                  type="number"
+                  value={formData.maxTurns}
+                  onChange={(e) => update('maxTurns', Math.max(1, Math.min(200, Number(e.target.value) || 1)))}
+                  className="w-full bg-secondary text-foreground rounded-lg px-3 py-2 border border-border focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                  min={1}
+                  max={200}
+                />
+                <p className="text-xs text-muted-foreground mt-1">{t('claudeAgent.maxTurnsHint')}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">{t('claudeAgent.budget')}</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-muted-foreground">$</span>
+                  <input
+                    type="number"
+                    value={formData.maxBudgetUsd}
+                    onChange={(e) => update('maxBudgetUsd', Math.max(0.01, Number(e.target.value) || 0.01))}
+                    className="w-full bg-secondary text-foreground rounded-lg pl-7 pr-3 py-2 border border-border focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                    min={0.01}
+                    step={0.5}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">{t('claudeAgent.budgetHint')}</p>
+              </div>
+            </div>
+
+            {/* Permission Mode */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">{t('claudeAgent.permissionMode')}</label>
+              <select
+                value={formData.permissionMode}
+                onChange={(e) => update('permissionMode', e.target.value)}
+                className="w-full bg-secondary text-foreground rounded-lg px-3 py-2 border border-border focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+              >
+                {CLAUDE_PERMISSION_MODES.map(mode => (
+                  <option key={mode.value} value={mode.value}>{mode.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Allowed Tools */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">{t('claudeAgent.allowedTools')}</label>
+              <input
+                type="text"
+                value={formData.allowedTools}
+                onChange={(e) => update('allowedTools', e.target.value)}
+                className="w-full bg-secondary text-foreground rounded-lg px-3 py-2 border border-border font-mono text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+              />
+              <p className="text-xs text-muted-foreground mt-1">{t('claudeAgent.allowedToolsHint')}</p>
+            </div>
+
+            {/* System Prompt */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">{t('claudeAgent.systemPrompt')}</label>
+              <textarea
+                value={formData.systemPrompt}
+                onChange={(e) => update('systemPrompt', e.target.value)}
+                className="w-full bg-secondary text-foreground rounded-lg px-3 py-2 border border-border focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                rows={3}
+                placeholder={t('claudeAgent.systemPromptPlaceholder')}
+              />
+            </div>
+
+            {/* Config Summary */}
+            <div className="bg-secondary/50 rounded-lg p-3 border border-border text-sm">
+              <div className="text-muted-foreground mb-1">{t('claudeAgent.summary')}</div>
+              <div className="text-foreground">
+                <span className={selectedTier.color}>{selectedTier.label}</span>
+                {' / '}
+                {formData.maxTurns} {t('claudeAgent.turns')}
+                {' / '}
+                ${formData.maxBudgetUsd.toFixed(2)} USD
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 mt-6">
+            <Button
+              type="submit"
+              className="flex-1 bg-amber-600 hover:bg-amber-500 text-white"
+              disabled={submitting}
+            >
+              {submitting ? t('claudeAgent.creating') : t('claudeAgent.create')}
+            </Button>
+            <Button
+              type="button"
+              onClick={onClose}
+              variant="secondary"
+              className="flex-1"
+              disabled={submitting}
+            >
+              {t('cancel')}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}

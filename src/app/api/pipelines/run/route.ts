@@ -3,6 +3,7 @@ import { getDatabase, db_helpers } from '@/lib/db'
 import { requireRole } from '@/lib/auth'
 import { eventBus } from '@/lib/event-bus'
 import { logger } from '@/lib/logger'
+import { getDefaultBackend } from '@/lib/agent-backend'
 
 interface PipelineStep {
   template_id: number
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/** Spawn a single pipeline step using `openclaw agent` */
+/** Spawn a single pipeline step using Agent SDK */
 async function spawnStep(
   db: ReturnType<typeof getDatabase>,
   pipelineName: string,
@@ -125,22 +126,17 @@ async function spawnStep(
   stepIdx: number,
   runId: number,
   workspaceId: number
-): Promise<{ success: boolean; stdout?: string; error?: string }> {
+): Promise<{ success: boolean; text?: string; sessionId?: string; error?: string }> {
   try {
-    const { runOpenClaw } = await import('@/lib/command')
-    const args = [
-      'agent',
-      '--message', `[Pipeline: ${pipelineName} | Step ${stepIdx + 1}] ${template.task_prompt}`,
-      '--timeout', String(template.timeout_seconds),
-      '--json',
-    ]
-    const { stdout } = await runOpenClaw(args, { timeoutMs: 15000 })
+    const prompt = `[Pipeline: ${pipelineName} | Step ${stepIdx + 1}] ${template.task_prompt}`
+    const backend = getDefaultBackend()
+    const result = await backend.dispatch(prompt, { maxTurns: 20, maxBudgetUsd: 3.0 })
 
-    const spawnId = `pipeline-${runId}-step-${stepIdx}-${Date.now()}`
+    const spawnId = result.sessionId || `pipeline-${runId}-step-${stepIdx}-${Date.now()}`
     steps[stepIdx].spawn_id = spawnId
     db.prepare('UPDATE pipeline_runs SET steps_snapshot = ? WHERE id = ? AND workspace_id = ?').run(JSON.stringify(steps), runId, workspaceId)
 
-    return { success: true, stdout: stdout.trim() }
+    return { success: true, text: result.text, sessionId: result.sessionId }
   } catch (err: any) {
     // Spawn failed - record error but keep pipeline running for manual advance
     steps[stepIdx].error = err.message

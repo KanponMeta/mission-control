@@ -8,7 +8,6 @@ import { requireRole } from '@/lib/auth';
 import { mutationLimiter } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { validateBody, createAgentSchema } from '@/lib/validation';
-import { runOpenClaw } from '@/lib/command';
 import { config as appConfig } from '@/lib/config';
 import { resolveWithin } from '@/lib/paths';
 import path from 'node:path';
@@ -202,29 +201,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (provision_openclaw_workspace) {
-      if (!appConfig.openclawStateDir) {
-        return NextResponse.json(
-          { error: 'OPENCLAW_STATE_DIR is not configured; cannot provision OpenClaw workspace' },
-          { status: 500 }
-        );
-      }
-
-      const workspacePath = openclaw_workspace_path
-        ? path.resolve(openclaw_workspace_path)
-        : resolveWithin(appConfig.openclawStateDir, path.join('workspaces', openclawId));
-
-      try {
-        await runOpenClaw(
-          ['agents', 'add', openclawId, '--workspace', workspacePath, '--non-interactive'],
-          { timeoutMs: 20000 }
-        );
-      } catch (provisionError: any) {
-        logger.error({ err: provisionError, openclawId, workspacePath }, 'OpenClaw workspace provisioning failed');
-        return NextResponse.json(
-          { error: provisionError?.message || 'Failed to provision OpenClaw agent workspace' },
-          { status: 502 }
-        );
-      }
+      // OpenClaw workspace provisioning is not available in Agent SDK mode
+      logger.warn({ openclawId }, 'OpenClaw workspace provisioning skipped — not available in Agent SDK mode');
     }
     
     const now = Math.floor(Date.now() / 1000);

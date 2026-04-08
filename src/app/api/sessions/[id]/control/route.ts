@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
-import { callOpenClawGateway } from '@/lib/openclaw-gateway'
+import { getDefaultBackend } from '@/lib/agent-backend'
 import { db_helpers } from '@/lib/db'
 import { mutationLimiter } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
@@ -38,12 +38,17 @@ export async function POST(
 
     let result: unknown
     if (action === 'terminate') {
-      result = await callOpenClawGateway('sessions_kill', { sessionKey: id }, 10_000)
+      try {
+        result = await getDefaultBackend().killSession(id)
+      } catch {
+        // Kill is idempotent — if the session doesn't exist, treat as success
+        result = { text: 'Session already terminated or not found' }
+      }
     } else {
       const message = action === 'monitor'
-        ? { type: 'control', action: 'monitor' }
-        : { type: 'control', action: 'pause' }
-      result = await callOpenClawGateway('sessions_send', { sessionKey: id, message }, 10_000)
+        ? JSON.stringify({ type: 'control', action: 'monitor' })
+        : JSON.stringify({ type: 'control', action: 'pause' })
+      result = await getDefaultBackend().sendMessage(id, message, { maxTurns: 1, maxBudgetUsd: 0.5 })
     }
 
     db_helpers.logActivity(

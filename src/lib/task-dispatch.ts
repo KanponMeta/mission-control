@@ -1,6 +1,6 @@
 import { getDatabase, db_helpers } from './db'
-import { runOpenClaw } from './command'
-import { callOpenClawGateway } from './openclaw-gateway'
+import { resolveBackendFromConfig } from './agent-backend'
+import { resolveModel, type ModelTier } from './agent-sdk'
 import { eventBus } from './event-bus'
 import { logger } from './logger'
 
@@ -26,8 +26,8 @@ interface DispatchableTask {
 // ---------------------------------------------------------------------------
 
 /**
- * Classify a task's complexity and return the appropriate model ID to pass
- * to the OpenClaw gateway. Uses keyword signals on title + description.
+ * Classify a task's complexity and return the appropriate model tier or ID
+ * for the Agent SDK. Uses keyword signals on title + description.
  *
  * Tiers:
  *   ROUTINE  → cheap model (Haiku)   — file ops, status checks, formatting
@@ -36,7 +36,7 @@ interface DispatchableTask {
  *
  * The caller may override this by setting agent.config.dispatchModel.
  */
-function classifyTaskModel(task: DispatchableTask): string | null {
+function classifyTaskModel(task: DispatchableTask): ModelTier | string | null {
   // Allow per-agent config override
   if (task.agent_config) {
     try {
@@ -55,7 +55,7 @@ function classifyTaskModel(task: DispatchableTask): string | null {
     'refactor', 'migration', 'performance optim', 'why is',
   ]
   if (priority === 'critical' || complexSignals.some(s => text.includes(s))) {
-    return '9router/cc/claude-opus-4-6'
+    return 'heavy'
   }
 
   // Routine signals → Haiku
@@ -66,26 +66,14 @@ function classifyTaskModel(task: DispatchableTask): string | null {
     'quick ', 'simple ', 'routine ', 'minor ',
   ]
   if (priority === 'low' && routineSignals.some(s => text.includes(s))) {
-    return '9router/cc/claude-haiku-4-5-20251001'
+    return 'light'
   }
   if (routineSignals.some(s => text.includes(s)) && priority !== 'high' && priority !== 'critical') {
-    return '9router/cc/claude-haiku-4-5-20251001'
+    return 'light'
   }
 
   // Default: let the agent's own configured model handle it (no override)
   return null
-}
-
-/** Extract the gateway agent identifier from the agent's config JSON.
- *  Falls back to agent_name (display name) if openclawId is not set. */
-function resolveGatewayAgentId(task: DispatchableTask): string {
-  if (task.agent_config) {
-    try {
-      const cfg = JSON.parse(task.agent_config)
-      if (typeof cfg.openclawId === 'string' && cfg.openclawId) return cfg.openclawId
-    } catch { /* ignore */ }
-  }
-  return task.agent_name
 }
 
 function buildTaskPrompt(task: DispatchableTask, rejectionFeedback?: string | null): string {
@@ -116,45 +104,9 @@ function buildTaskPrompt(task: DispatchableTask, rejectionFeedback?: string | nu
   return lines.join('\n')
 }
 
-/** Extract first valid JSON object from raw stdout (handles surrounding text/warnings). */
-function parseGatewayJson(raw: string): any | null {
-  const trimmed = String(raw || '').trim()
-  if (!trimmed) return null
-  const start = trimmed.indexOf('{')
-  const end = trimmed.lastIndexOf('}')
-  if (start < 0 || end < start) return null
-  try {
-    return JSON.parse(trimmed.slice(start, end + 1))
-  } catch {
-    return null
-  }
-}
-
 interface AgentResponseParsed {
   text: string | null
   sessionId: string | null
-}
-
-function parseAgentResponse(stdout: string): AgentResponseParsed {
-  try {
-    const parsed = JSON.parse(stdout)
-    const sessionId: string | null = typeof parsed?.sessionId === 'string' ? parsed.sessionId
-      : typeof parsed?.session_id === 'string' ? parsed.session_id
-      : null
-
-    // OpenClaw agent --json returns { payloads: [{ text: "..." }] }
-    if (parsed?.payloads?.[0]?.text) {
-      return { text: parsed.payloads[0].text, sessionId }
-    }
-    // Fallback: if there's a result or output field
-    if (parsed?.result) return { text: String(parsed.result), sessionId }
-    if (parsed?.output) return { text: String(parsed.output), sessionId }
-    // Last resort: stringify the whole response
-    return { text: JSON.stringify(parsed, null, 2), sessionId }
-  } catch {
-    // Not valid JSON — return raw stdout if non-empty
-    return { text: stdout.trim() || null, sessionId: null }
-  }
 }
 
 interface ReviewableTask {
@@ -167,16 +119,6 @@ interface ReviewableTask {
   workspace_id: number
   ticket_prefix: string | null
   project_ticket_no: number | null
-}
-
-function resolveGatewayAgentIdForReview(task: ReviewableTask): string {
-  if (task.agent_config) {
-    try {
-      const cfg = JSON.parse(task.agent_config)
-      if (typeof cfg.openclawId === 'string' && cfg.openclawId) return cfg.openclawId
-    } catch { /* ignore */ }
-  }
-  return task.assigned_to || 'jarv'
 }
 
 function buildReviewPrompt(task: ReviewableTask): string {
@@ -262,33 +204,18 @@ export async function runAegisReviews(): Promise<{ ok: boolean; message: string 
 
     try {
       const prompt = buildReviewPrompt(task)
-      // Resolve the gateway agent ID from config, falling back to assigned_to or default
-      const reviewAgent = resolveGatewayAgentIdForReview(task)
 
-      const invokeParams = {
-        message: prompt,
-        agentId: reviewAgent,
-        idempotencyKey: `aegis-review-${task.id}-${Date.now()}`,
-        deliver: false,
-      }
-      // Use --expect-final to block until the agent completes and returns the full
-      // response payload (payloads[0].text). The two-step agent → agent.wait pattern
-      // only returns lifecycle metadata (runId/status/timestamps) and never includes
-      // the agent's actual text, so Aegis could never parse a verdict.
-      const finalResult = await runOpenClaw(
-        ['gateway', 'call', 'agent', '--expect-final', '--timeout', '120000', '--params', JSON.stringify(invokeParams), '--json'],
-        { timeoutMs: 125_000 }
-      )
-      const finalPayload = parseGatewayJson(finalResult.stdout)
-        ?? parseGatewayJson(String((finalResult as any)?.stderr || ''))
-      const agentResponse = parseAgentResponse(
-        finalPayload?.result ? JSON.stringify(finalPayload.result) : finalResult.stdout
-      )
-      if (!agentResponse.text) {
+      const backend = resolveBackendFromConfig(task.agent_config)
+      const reviewResult = await backend.dispatch(prompt, {
+        modelTier: 'light',
+        maxTurns: 5,
+        maxBudgetUsd: 0.5,
+        allowedTools: ['Read', 'Glob', 'Grep'],
+      })
+      if (!reviewResult.text) {
         throw new Error('Aegis review returned empty response')
       }
-
-      const verdict = parseReviewVerdict(agentResponse.text)
+      const verdict = parseReviewVerdict(reviewResult.text)
 
       // Insert quality review record
       db.prepare(`
@@ -440,57 +367,22 @@ export async function dispatchAssignedTasks(): Promise<{ ok: boolean; message: s
       let agentResponse: AgentResponseParsed
 
       if (targetSession) {
-        // Dispatch to a specific existing session via chat.send
+        // Dispatch to a specific existing session via resume
         logger.info({ taskId: task.id, targetSession, agent: task.agent_name }, 'Dispatching task to targeted session')
-        const sendResult = await callOpenClawGateway<any>(
-          'chat.send',
-          {
-            sessionKey: targetSession,
-            message: prompt,
-            idempotencyKey: `task-dispatch-${task.id}-${Date.now()}`,
-            deliver: false,
-          },
-          125_000,
-        )
-        const status = String(sendResult?.status || '').toLowerCase()
-        if (status !== 'started' && status !== 'ok' && status !== 'in_flight') {
-          throw new Error(`chat.send to session ${targetSession} returned status: ${status}`)
-        }
-        // chat.send is fire-and-forget; we record the session but won't get inline response text
-        agentResponse = {
-          text: `Task dispatched to existing session ${targetSession}. The agent will process it within that session context.`,
-          sessionId: sendResult?.runId || targetSession,
-        }
+        const backend = resolveBackendFromConfig(task.agent_config)
+        const sendResult = await backend.sendMessage(targetSession, prompt, { maxTurns: 20, maxBudgetUsd: 3.0 })
+        agentResponse = { text: sendResult.text, sessionId: sendResult.sessionId }
       } else {
-        // Step 1: Invoke via gateway (new session)
-        const gatewayAgentId = resolveGatewayAgentId(task)
+        // Invoke agent directly (new session)
         const dispatchModel = classifyTaskModel(task)
-        const invokeParams: Record<string, unknown> = {
-          message: prompt,
-          agentId: gatewayAgentId,
-          idempotencyKey: `task-dispatch-${task.id}-${Date.now()}`,
-          deliver: false,
-        }
-        // Route to appropriate model tier based on task complexity.
-        // null = no override, agent uses its own configured default model.
-        if (dispatchModel) invokeParams.model = dispatchModel
-
-        // Use --expect-final to block until the agent completes and returns the full
-        // response payload (result.payloads[0].text). The two-step agent → agent.wait
-        // pattern only returns lifecycle metadata and never includes the agent's text.
-        const finalResult = await runOpenClaw(
-          ['gateway', 'call', 'agent', '--expect-final', '--timeout', '120000', '--params', JSON.stringify(invokeParams), '--json'],
-          { timeoutMs: 125_000 }
-        )
-        const finalPayload = parseGatewayJson(finalResult.stdout)
-          ?? parseGatewayJson(String((finalResult as any)?.stderr || ''))
-
-        agentResponse = parseAgentResponse(
-          finalPayload?.result ? JSON.stringify(finalPayload.result) : finalResult.stdout
-        )
-        if (!agentResponse.sessionId && finalPayload?.result?.meta?.agentMeta?.sessionId) {
-          agentResponse.sessionId = finalPayload.result.meta.agentMeta.sessionId
-        }
+        const backend = resolveBackendFromConfig(task.agent_config)
+        const result = await backend.dispatch(prompt, {
+          model: typeof dispatchModel === 'string' && !['light', 'default', 'heavy'].includes(dispatchModel) ? dispatchModel : undefined,
+          modelTier: ['light', 'default', 'heavy'].includes(dispatchModel as string) ? dispatchModel as ModelTier : undefined,
+          maxTurns: 30,
+          maxBudgetUsd: 3.0,
+        })
+        agentResponse = { text: result.text, sessionId: result.sessionId }
       } // end else (new session dispatch)
 
       if (!agentResponse.text) {

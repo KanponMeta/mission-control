@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase, db_helpers } from '@/lib/db'
-import { runOpenClaw } from '@/lib/command'
 import { requireRole } from '@/lib/auth'
 import { logger } from '@/lib/logger'
+import { resolveBackendFromConfig } from '@/lib/agent-backend'
 
 export async function POST(
   request: NextRequest,
@@ -35,28 +35,14 @@ export async function POST(
       )
     }
 
-    const message =
-      customMessage ||
-      `Wake up check-in for ${agent.name}. Please review assigned tasks and notifications.`
-
-    const { stdout, stderr } = await runOpenClaw(
-      ['gateway', 'sessions_send', '--session', agent.session_key, '--message', message],
-      { timeoutMs: 10000 }
-    )
-
-    if (stderr && stderr.includes('error')) {
-      return NextResponse.json(
-        { error: stderr.trim() || 'Failed to wake agent' },
-        { status: 500 }
-      )
-    }
+    const backend = resolveBackendFromConfig(agent.config)
+    await backend.sendMessage(agent.session_key, 'You have been woken up. Check for pending work.', { maxTurns: 1, maxBudgetUsd: 0.1 })
 
     db_helpers.updateAgentStatus(agent.name, 'idle', 'Manual wake', workspaceId)
 
     return NextResponse.json({
       success: true,
       session_key: agent.session_key,
-      stdout: stdout.trim()
     })
   } catch (error) {
     logger.error({ err: error }, 'POST /api/agents/[id]/wake error')

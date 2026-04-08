@@ -1567,7 +1567,28 @@
     "justNow": "À l'instant",
     "minutesAgo": "il y a {count}m",
     "hoursAgo": "il y a {count}h",
-    "daysAgo": "il y a {count}j"
+    "daysAgo": "il y a {count}j",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "Nouvel Agent Claude Code",
+      "subtitle": "Propulse par Claude Agent SDK",
+      "namePlaceholder": "ex: claude-dev, code-reviewer",
+      "rolePlaceholder": "ex: developpeur, revieweur, chercheur",
+      "modelTier": "Niveau de modele",
+      "maxTurns": "Tours max",
+      "maxTurnsHint": "1-200 tours par invocation",
+      "budget": "Limite de budget",
+      "budgetHint": "Cout max par invocation",
+      "permissionMode": "Mode de permission",
+      "allowedTools": "Outils autorises",
+      "allowedToolsHint": "Noms d'outils separes par des virgules",
+      "systemPrompt": "Prompt systeme (Optionnel)",
+      "systemPromptPlaceholder": "Instructions personnalisees pour cet agent...",
+      "summary": "Resume de la configuration",
+      "turns": "tours",
+      "creating": "Creation...",
+      "create": "Creer un Agent Claude"
+    }
   },
   "multiGateway": {
     "title": "Gestionnaire de passerelles",
@@ -1840,7 +1861,32 @@
     "noAgents": "No agents registered",
     "noAgentsHint": "Sync from config or create your first agent to get started.",
     "wake": "Wake",
-    "spawn": "Spawn"
+    "spawn": "Spawn",
+    "cancel": "Annuler",
+    "failedToCreate": "Impossible de creer l'agent",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "Nouvel Agent Claude Code",
+      "subtitle": "Propulse par Claude Agent SDK",
+      "name": "Nom",
+      "namePlaceholder": "ex: claude-dev, code-reviewer",
+      "role": "Role",
+      "rolePlaceholder": "ex: developpeur, revieweur, chercheur",
+      "modelTier": "Niveau de modele",
+      "maxTurns": "Tours max",
+      "maxTurnsHint": "1-200 tours par invocation",
+      "budget": "Limite de budget",
+      "budgetHint": "Cout max par invocation",
+      "permissionMode": "Mode de permission",
+      "allowedTools": "Outils autorises",
+      "allowedToolsHint": "Noms d'outils separes par des virgules",
+      "systemPrompt": "Prompt systeme (Optionnel)",
+      "systemPromptPlaceholder": "Instructions personnalisees pour cet agent...",
+      "summary": "Resume de la configuration",
+      "turns": "tours",
+      "creating": "Creation...",
+      "create": "Creer un Agent Claude"
+    }
   },
   "orchestration": {
     "tabCommand": "Commande",

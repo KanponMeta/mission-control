@@ -1567,7 +1567,28 @@
     "justNow": "たった今",
     "minutesAgo": "{count}分前",
     "hoursAgo": "{count}時間前",
-    "daysAgo": "{count}日前"
+    "daysAgo": "{count}日前",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "Claude Code Agent を作成",
+      "subtitle": "Claude Agent SDK 搭載",
+      "namePlaceholder": "例: claude-dev, code-reviewer",
+      "rolePlaceholder": "例: 開発者, レビュアー, リサーチャー",
+      "modelTier": "モデルティア",
+      "maxTurns": "最大ターン数",
+      "maxTurnsHint": "1回の実行で1〜200ターン",
+      "budget": "予算上限",
+      "budgetHint": "1回の実行の最大コスト",
+      "permissionMode": "権限モード",
+      "allowedTools": "許可ツール",
+      "allowedToolsHint": "カンマ区切りのツール名",
+      "systemPrompt": "システムプロンプト（任意）",
+      "systemPromptPlaceholder": "このエージェントへのカスタム指示...",
+      "summary": "設定概要",
+      "turns": "ターン",
+      "creating": "作成中...",
+      "create": "Claude Agent を作成"
+    }
   },
   "multiGateway": {
     "title": "ゲートウェイマネージャー",
@@ -1840,7 +1861,32 @@
     "noAgents": "No agents registered",
     "noAgentsHint": "Sync from config or create your first agent to get started.",
     "wake": "Wake",
-    "spawn": "Spawn"
+    "spawn": "Spawn",
+    "cancel": "キャンセル",
+    "failedToCreate": "エージェントの作成に失敗しました",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "Claude Code Agent を作成",
+      "subtitle": "Claude Agent SDK 搭載",
+      "name": "名前",
+      "namePlaceholder": "例: claude-dev, code-reviewer",
+      "role": "役割",
+      "rolePlaceholder": "例: 開発者, レビュアー, リサーチャー",
+      "modelTier": "モデルティア",
+      "maxTurns": "最大ターン数",
+      "maxTurnsHint": "1回の実行で1〜200ターン",
+      "budget": "予算上限",
+      "budgetHint": "1回の実行の最大コスト",
+      "permissionMode": "権限モード",
+      "allowedTools": "許可ツール",
+      "allowedToolsHint": "カンマ区切りのツール名",
+      "systemPrompt": "システムプロンプト（任意）",
+      "systemPromptPlaceholder": "このエージェントへのカスタム指示...",
+      "summary": "設定概要",
+      "turns": "ターン",
+      "creating": "作成中...",
+      "create": "Claude Agent を作成"
+    }
   },
   "orchestration": {
     "tabCommand": "コマンド",

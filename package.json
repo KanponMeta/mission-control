@@ -22,6 +22,7 @@
     "quality:gate": "pnpm test:all"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.92",
     "@radix-ui/react-slot": "^1.2.4",
     "@scalar/api-reference-react": "^0.8.66",
     "@xyflow/react": "^12.10.0",

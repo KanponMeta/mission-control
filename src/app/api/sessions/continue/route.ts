@@ -1,9 +1,7 @@
-import { promises as fs } from 'node:fs'
-import path from 'node:path'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
 import { logger } from '@/lib/logger'
-import { runCommand } from '@/lib/command'
+import { getDefaultBackend } from '@/lib/agent-backend'
 
 type ContinueKind = 'claude-code' | 'codex-cli'
 
@@ -38,31 +36,13 @@ export async function POST(request: NextRequest) {
     let reply = ''
 
     if (kind === 'claude-code') {
-      const result = await runCommand('claude', ['--print', '--resume', sessionId, prompt], {
-        timeoutMs: 180000,
-      })
-      reply = (result.stdout || '').trim() || (result.stderr || '').trim()
+      const backend = getDefaultBackend()
+      const result = await backend.sendMessage(sessionId, prompt, { maxTurns: 20, maxBudgetUsd: 2.0 })
+      reply = result.text
     } else {
-      const outputPath = path.join('/tmp', `mc-codex-last-${Date.now()}-${Math.random().toString(36).slice(2)}.txt`)
-      try {
-        await runCommand('codex', ['exec', 'resume', sessionId, prompt, '--skip-git-repo-check', '-o', outputPath], {
-          timeoutMs: 180000,
-        })
-      } finally {
-        // Read after run attempt either way for best-effort output
-      }
-
-      try {
-        reply = (await fs.readFile(outputPath, 'utf-8')).trim()
-      } catch {
-        reply = ''
-      }
-
-      try {
-        await fs.unlink(outputPath)
-      } catch {
-        // ignore
-      }
+      const backend = getDefaultBackend()
+      const result = await backend.sendMessage(sessionId, prompt, { maxTurns: 20, maxBudgetUsd: 2.0 })
+      reply = result.text
     }
 
     if (!reply) {

@@ -1,6 +1,7 @@
+import crypto from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth'
-import { callOpenClawGateway } from '@/lib/openclaw-gateway'
+import { getDefaultBackend } from '@/lib/agent-backend'
 import { config } from '@/lib/config'
 import { readdir, readFile, stat } from 'fs/promises'
 import { join } from 'path'
@@ -9,10 +10,6 @@ import { logger } from '@/lib/logger'
 import { validateBody, spawnAgentSchema } from '@/lib/validation'
 import { scanForInjection } from '@/lib/injection-guard'
 import { logAuditEvent } from '@/lib/db'
-
-function getPreferredToolsProfile(): string {
-  return String(process.env.OPENCLAW_TOOLS_PROFILE || 'coding').trim() || 'coding'
-}
 
 export async function POST(request: NextRequest) {
   const auth = requireRole(request, 'operator')
@@ -50,39 +47,11 @@ export async function POST(request: NextRequest) {
     // Generate spawn ID
     const spawnId = `spawn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
-    // Construct the spawn command
-    // Using OpenClaw's sessions_spawn function via clawdbot CLI
-    const spawnPayload = {
-      task,
-      label,
-      ...(model ? { model } : {}),
-      runTimeoutSeconds: timeout,
-      tools: {
-        profile: getPreferredToolsProfile(),
-      },
-    }
-
     try {
-      // Call gateway sessions_spawn directly. Try with tools.profile first,
-      // fall back without it for older gateways that don't support the field.
-      let result: any
-      let compatibilityFallbackUsed = false
-      try {
-        result = await callOpenClawGateway('sessions_spawn', spawnPayload, 15_000)
-      } catch (firstError: any) {
-        const rawErr = String(firstError?.message || '').toLowerCase()
-        const isToolsSchemaError =
-          (rawErr.includes('unknown field') || rawErr.includes('unknown key') || rawErr.includes('invalid argument')) &&
-          (rawErr.includes('tools') || rawErr.includes('profile'))
-        if (!isToolsSchemaError) throw firstError
-
-        const fallbackPayload = { ...spawnPayload }
-        delete (fallbackPayload as any).tools
-        result = await callOpenClawGateway('sessions_spawn', fallbackPayload, 15_000)
-        compatibilityFallbackUsed = true
-      }
-
-      const sessionInfo = result?.sessionId || result?.session_id || null
+      const sessionUuid = crypto.randomUUID()
+      const backend = getDefaultBackend()
+      const result = await backend.dispatch(task, { model: model || undefined, sessionId: sessionUuid, maxTurns: 1, maxBudgetUsd: 1.0 })
+      const sessionInfo = result.sessionId || sessionUuid
 
       const ipAddress = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
       logAuditEvent({
@@ -94,8 +63,6 @@ export async function POST(request: NextRequest) {
           model: model ?? null,
           label,
           task_summary: task.length > 120 ? task.slice(0, 120) + '...' : task,
-          toolsProfile: getPreferredToolsProfile(),
-          compatibilityFallbackUsed,
         },
         ip_address: ipAddress,
       })
@@ -109,11 +76,7 @@ export async function POST(request: NextRequest) {
         label,
         timeoutSeconds: timeout,
         createdAt: Date.now(),
-        result,
-        compatibility: {
-          toolsProfile: getPreferredToolsProfile(),
-          fallbackUsed: compatibilityFallbackUsed,
-        },
+        costUsd: result.costUsd,
       })
 
     } catch (execError: any) {

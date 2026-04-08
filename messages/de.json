@@ -1567,7 +1567,28 @@
     "justNow": "Gerade eben",
     "minutesAgo": "vor {count}m",
     "hoursAgo": "vor {count}h",
-    "daysAgo": "vor {count}d"
+    "daysAgo": "vor {count}d",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "Neuer Claude Code Agent",
+      "subtitle": "Basierend auf Claude Agent SDK",
+      "namePlaceholder": "z.B. claude-dev, code-reviewer",
+      "rolePlaceholder": "z.B. Entwickler, Reviewer, Forscher",
+      "modelTier": "Modellstufe",
+      "maxTurns": "Max. Runden",
+      "maxTurnsHint": "1-200 Runden pro Aufruf",
+      "budget": "Budgetlimit",
+      "budgetHint": "Max. Kosten pro Aufruf",
+      "permissionMode": "Berechtigungsmodus",
+      "allowedTools": "Erlaubte Tools",
+      "allowedToolsHint": "Kommagetrennte Toolnamen",
+      "systemPrompt": "System-Prompt (Optional)",
+      "systemPromptPlaceholder": "Benutzerdefinierte Anweisungen für diesen Agenten...",
+      "summary": "Konfigurationsübersicht",
+      "turns": "Runden",
+      "creating": "Wird erstellt...",
+      "create": "Claude Agent erstellen"
+    }
   },
   "multiGateway": {
     "title": "Gateway-Manager",
@@ -1840,7 +1861,32 @@
     "noAgents": "No agents registered",
     "noAgentsHint": "Sync from config or create your first agent to get started.",
     "wake": "Wake",
-    "spawn": "Spawn"
+    "spawn": "Spawn",
+    "cancel": "Abbrechen",
+    "failedToCreate": "Agent konnte nicht erstellt werden",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "Neuer Claude Code Agent",
+      "subtitle": "Basierend auf Claude Agent SDK",
+      "name": "Name",
+      "namePlaceholder": "z.B. claude-dev, code-reviewer",
+      "role": "Rolle",
+      "rolePlaceholder": "z.B. Entwickler, Reviewer, Forscher",
+      "modelTier": "Modellstufe",
+      "maxTurns": "Max. Runden",
+      "maxTurnsHint": "1-200 Runden pro Aufruf",
+      "budget": "Budgetlimit",
+      "budgetHint": "Max. Kosten pro Aufruf",
+      "permissionMode": "Berechtigungsmodus",
+      "allowedTools": "Erlaubte Tools",
+      "allowedToolsHint": "Kommagetrennte Toolnamen",
+      "systemPrompt": "System-Prompt (Optional)",
+      "systemPromptPlaceholder": "Benutzerdefinierte Anweisungen...",
+      "summary": "Konfigurationsübersicht",
+      "turns": "Runden",
+      "creating": "Wird erstellt...",
+      "create": "Claude Agent erstellen"
+    }
   },
   "orchestration": {
     "tabCommand": "Befehl",

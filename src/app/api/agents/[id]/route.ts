@@ -4,7 +4,6 @@ import { requireRole } from '@/lib/auth'
 import { writeAgentToConfig, enrichAgentConfigFromWorkspace, removeAgentFromConfig } from '@/lib/agent-sync'
 import { eventBus } from '@/lib/event-bus'
 import { logger } from '@/lib/logger'
-import { runOpenClaw } from '@/lib/command'
 
 /**
  * GET /api/agents/[id] - Get a single agent by ID or name
@@ -227,21 +226,8 @@ export async function DELETE(
     }
 
     if (removeWorkspace) {
-      const agentConfig = agent.config ? JSON.parse(agent.config) : {}
-      const openclawId =
-        String(agentConfig?.openclawId || agent.name || '')
-          .toLowerCase()
-          .replace(/[^a-z0-9._-]+/g, '-')
-          .replace(/^-+|-+$/g, '') || agent.name
-      try {
-        await runOpenClaw(['agents', 'delete', openclawId, '--force'], { timeoutMs: 30000 })
-      } catch (err: any) {
-        logger.error({ err, openclawId, agent: agent.name }, 'Failed to remove OpenClaw agent/workspace')
-        return NextResponse.json(
-          { error: `Failed to remove OpenClaw workspace for ${agent.name}: ${err?.message || 'unknown error'}` },
-          { status: 502 }
-        )
-      }
+      // OpenClaw workspace removal is not available in Agent SDK mode — database delete is sufficient
+      logger.warn({ agent: agent.name }, 'OpenClaw workspace removal skipped — not available in Agent SDK mode')
     }
 
     let configCleanupWarning: string | null = null

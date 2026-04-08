@@ -67,6 +67,17 @@ const resolvedGnapRepoPath =
   process.env.GNAP_REPO_PATH || path.join(configuredDataDir, '.gnap')
 
 export const config = {
+  // Agent SDK (百炼 / Anthropic)
+  agentSdk: {
+    baseUrl: process.env.AGENT_SDK_BASE_URL || 'https://api.anthropic.com',
+    apiKey: process.env.AGENT_SDK_API_KEY || '',
+    model: process.env.AGENT_SDK_MODEL || 'claude-sonnet-4-6',
+    modelLight: process.env.AGENT_SDK_MODEL_LIGHT || 'claude-haiku-4-5',
+    modelHeavy: process.env.AGENT_SDK_MODEL_HEAVY || 'claude-opus-4-6',
+    maxTurns: clampInt(Number(process.env.AGENT_SDK_MAX_TURNS || '30'), 1, 200, 30),
+    maxBudget: Number(process.env.AGENT_SDK_MAX_BUDGET_USD || '5.0'),
+    permission: process.env.AGENT_SDK_PERMISSION_MODE || 'acceptEdits',
+  },
   claudeHome:
     process.env.MC_CLAUDE_HOME ||
     path.join(os.homedir(), '.claude'),

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDatabase, Notification, db_helpers } from '@/lib/db';
-import { runOpenClaw } from '@/lib/command';
+import { resolveBackendFromConfig, getDefaultBackend } from '@/lib/agent-backend';
 import { requireRole } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     
     // Get undelivered notifications
     let query = `
-      SELECT n.*, a.session_key 
+      SELECT n.*, a.session_key, a.config
       FROM notifications n
       LEFT JOIN agents a ON n.recipient = a.name AND a.workspace_id = n.workspace_id
       WHERE n.delivered_at IS NULL AND n.workspace_id = ?
@@ -79,29 +79,18 @@ export async function POST(request: NextRequest) {
         const message = formatNotificationMessage(notification);
         
         if (!dry_run) {
-          // Send notification via OpenClaw gateway call agent
+          // Send notification via Agent SDK
           try {
-            const invokeParams = {
-              message,
-              agentId: notification.recipient,
-              idempotencyKey: `notification-${notification.id}-${Date.now()}`,
-              deliver: false,
-            };
-            const { stdout, stderr } = await runOpenClaw(
-              [
-                'gateway',
-                'call',
-                'agent',
-                '--params',
-                JSON.stringify(invokeParams),
-                '--json'
-              ],
-              { timeoutMs: 30000 }
-            );
-
-            if (stderr && stderr.includes('error')) {
-              throw new Error(`OpenClaw error: ${stderr}`);
-            }
+            const backend = notification.session_key
+              ? resolveBackendFromConfig((notification as any).config)
+              : getDefaultBackend();
+            const result = await backend.dispatch(message, {
+              modelTier: 'light',
+              maxTurns: 1,
+              maxBudgetUsd: 0.2,
+              persistSession: false,
+            });
+            const stdout = typeof result === 'string' ? result : JSON.stringify(result);
             
             // Mark as delivered
             const now = Math.floor(Date.now() / 1000);

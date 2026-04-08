@@ -102,7 +102,8 @@ describe('DELETE /api/agents/[id]', () => {
     const response = await DELETE(request, { params: Promise.resolve({ id: '8' }) })
 
     expect(response.status).toBe(200)
-    expect(runOpenClaw).toHaveBeenCalledWith(['agents', 'delete', 'adam', '--force'], { timeoutMs: 30000 })
+    // runOpenClaw is no longer called — workspace deletion via OpenClaw CLI was removed in Agent SDK migration
+    expect(runOpenClaw).not.toHaveBeenCalled()
     expect(removeAgentFromConfig).toHaveBeenCalledWith({ id: 'adam', name: 'adam' })
     expect(deleteStmt.run).toHaveBeenCalledWith(8, 1)
   })

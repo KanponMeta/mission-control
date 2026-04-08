@@ -1567,7 +1567,28 @@
     "justNow": "Ahora mismo",
     "minutesAgo": "hace {count}m",
     "hoursAgo": "hace {count}h",
-    "daysAgo": "hace {count}d"
+    "daysAgo": "hace {count}d",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "Nuevo Agent Claude Code",
+      "subtitle": "Impulsado por Claude Agent SDK",
+      "namePlaceholder": "ej: claude-dev, code-reviewer",
+      "rolePlaceholder": "ej: desarrollador, revisor, investigador",
+      "modelTier": "Nivel de modelo",
+      "maxTurns": "Turnos max",
+      "maxTurnsHint": "1-200 turnos por invocacion",
+      "budget": "Limite de presupuesto",
+      "budgetHint": "Costo max por invocacion",
+      "permissionMode": "Modo de permisos",
+      "allowedTools": "Herramientas permitidas",
+      "allowedToolsHint": "Nombres de herramientas separados por comas",
+      "systemPrompt": "Prompt del sistema (Opcional)",
+      "systemPromptPlaceholder": "Instrucciones personalizadas para este agente...",
+      "summary": "Resumen de configuracion",
+      "turns": "turnos",
+      "creating": "Creando...",
+      "create": "Crear Agent Claude"
+    }
   },
   "multiGateway": {
     "title": "Gestor de puertas de enlace",
@@ -1840,7 +1861,32 @@
     "noAgents": "No agents registered",
     "noAgentsHint": "Sync from config or create your first agent to get started.",
     "wake": "Wake",
-    "spawn": "Spawn"
+    "spawn": "Spawn",
+    "cancel": "Cancelar",
+    "failedToCreate": "Error al crear el agente",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "Nuevo Agent Claude Code",
+      "subtitle": "Impulsado por Claude Agent SDK",
+      "name": "Nombre",
+      "namePlaceholder": "ej: claude-dev, code-reviewer",
+      "role": "Rol",
+      "rolePlaceholder": "ej: desarrollador, revisor, investigador",
+      "modelTier": "Nivel de modelo",
+      "maxTurns": "Turnos max",
+      "maxTurnsHint": "1-200 turnos por invocacion",
+      "budget": "Limite de presupuesto",
+      "budgetHint": "Costo max por invocacion",
+      "permissionMode": "Modo de permisos",
+      "allowedTools": "Herramientas permitidas",
+      "allowedToolsHint": "Nombres separados por comas",
+      "systemPrompt": "Prompt del sistema (Opcional)",
+      "systemPromptPlaceholder": "Instrucciones personalizadas para este agente...",
+      "summary": "Resumen de configuracion",
+      "turns": "turnos",
+      "creating": "Creando...",
+      "create": "Crear Agent Claude"
+    }
   },
   "orchestration": {
     "tabCommand": "Comando",

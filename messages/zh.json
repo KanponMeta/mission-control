@@ -708,7 +708,32 @@
     "noAgents": "No agents registered",
     "noAgentsHint": "Sync from config or create your first agent to get started.",
     "wake": "Wake",
-    "spawn": "Spawn"
+    "spawn": "Spawn",
+    "cancel": "取消",
+    "failedToCreate": "创建 Agent 失败",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "新建 Claude Code Agent",
+      "subtitle": "基于 Claude Agent SDK",
+      "name": "名称",
+      "namePlaceholder": "例如: claude-dev, code-reviewer",
+      "role": "角色",
+      "rolePlaceholder": "例如: 开发者, 审核员, 研究员",
+      "modelTier": "模型层级",
+      "maxTurns": "最大轮次",
+      "maxTurnsHint": "每次调用 1-200 轮",
+      "budget": "预算上限",
+      "budgetHint": "每次调用最大成本",
+      "permissionMode": "权限模式",
+      "allowedTools": "允许的工具",
+      "allowedToolsHint": "以逗号分隔的工具名称",
+      "systemPrompt": "系统提示词 (可选)",
+      "systemPromptPlaceholder": "为此 Agent 定制的指令...",
+      "summary": "配置概览",
+      "turns": "轮",
+      "creating": "创建中...",
+      "create": "创建 Claude Agent"
+    }
   },
   "orchestration": {
     "tabCommand": "命令",
@@ -1805,7 +1830,28 @@
     "justNow": "刚刚",
     "minutesAgo": "{count}分钟前",
     "hoursAgo": "{count}小时前",
-    "daysAgo": "{count}天前"
+    "daysAgo": "{count}天前",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "新建 Claude Code Agent",
+      "subtitle": "基于 Claude Agent SDK",
+      "namePlaceholder": "例如: claude-dev, code-reviewer",
+      "rolePlaceholder": "例如: 开发者, 审核员, 研究员",
+      "modelTier": "模型层级",
+      "maxTurns": "最大轮次",
+      "maxTurnsHint": "每次调用 1-200 轮",
+      "budget": "预算上限",
+      "budgetHint": "每次调用最大成本",
+      "permissionMode": "权限模式",
+      "allowedTools": "允许的工具",
+      "allowedToolsHint": "以逗号分隔的工具名称",
+      "systemPrompt": "系统提示词 (可选)",
+      "systemPromptPlaceholder": "为此 Agent 定制的指令...",
+      "summary": "配置概览",
+      "turns": "轮",
+      "creating": "创建中...",
+      "create": "创建 Claude Agent"
+    }
   },
   "multiGateway": {
     "title": "网关管理器",

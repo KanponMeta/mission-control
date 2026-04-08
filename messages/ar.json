@@ -1567,7 +1567,28 @@
     "justNow": "الآن",
     "minutesAgo": "منذ {count} د",
     "hoursAgo": "منذ {count} س",
-    "daysAgo": "منذ {count} ي"
+    "daysAgo": "منذ {count} ي",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "وكيل Claude Code جديد",
+      "subtitle": "مدعوم بـ Claude Agent SDK",
+      "namePlaceholder": "مثال: claude-dev, code-reviewer",
+      "rolePlaceholder": "مثال: مطور، مراجع، باحث",
+      "modelTier": "مستوى النموذج",
+      "maxTurns": "الحد الأقصى للأدوار",
+      "maxTurnsHint": "1-200 دور لكل استدعاء",
+      "budget": "حد الميزانية",
+      "budgetHint": "الحد الأقصى للتكلفة لكل استدعاء",
+      "permissionMode": "وضع الأذونات",
+      "allowedTools": "الأدوات المسموحة",
+      "allowedToolsHint": "أسماء الأدوات مفصولة بفواصل",
+      "systemPrompt": "موجه النظام (اختياري)",
+      "systemPromptPlaceholder": "تعليمات مخصصة لهذا الوكيل...",
+      "summary": "ملخص التكوين",
+      "turns": "دور",
+      "creating": "جارٍ الإنشاء...",
+      "create": "إنشاء وكيل Claude"
+    }
   },
   "multiGateway": {
     "title": "مدير البوابات",
@@ -1840,7 +1861,32 @@
     "noAgents": "No agents registered",
     "noAgentsHint": "Sync from config or create your first agent to get started.",
     "wake": "Wake",
-    "spawn": "Spawn"
+    "spawn": "Spawn",
+    "cancel": "إلغاء",
+    "failedToCreate": "فشل في إنشاء الوكيل",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "وكيل Claude Code جديد",
+      "subtitle": "مدعوم بـ Claude Agent SDK",
+      "name": "الاسم",
+      "namePlaceholder": "مثال: claude-dev, code-reviewer",
+      "role": "الدور",
+      "rolePlaceholder": "مثال: مطور، مراجع، باحث",
+      "modelTier": "مستوى النموذج",
+      "maxTurns": "الحد الأقصى للأدوار",
+      "maxTurnsHint": "1-200 دور لكل استدعاء",
+      "budget": "حد الميزانية",
+      "budgetHint": "الحد الأقصى للتكلفة لكل استدعاء",
+      "permissionMode": "وضع الأذونات",
+      "allowedTools": "الأدوات المسموحة",
+      "allowedToolsHint": "أسماء الأدوات مفصولة بفواصل",
+      "systemPrompt": "موجه النظام (اختياري)",
+      "systemPromptPlaceholder": "تعليمات مخصصة لهذا الوكيل...",
+      "summary": "ملخص التكوين",
+      "turns": "دور",
+      "creating": "جارٍ الإنشاء...",
+      "create": "إنشاء وكيل Claude"
+    }
   },
   "orchestration": {
     "tabCommand": "الأوامر",

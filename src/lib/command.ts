@@ -71,6 +71,7 @@ export function runCommand(
   })
 }
 
+/** OpenClaw CLI wrapper. Used by OpenClawBackend for agents with backend: 'openclaw'. */
 export function runOpenClaw(args: string[], options: CommandOptions = {}) {
   return runCommand(config.openclawBin, args, {
     ...options,

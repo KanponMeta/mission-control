@@ -1567,7 +1567,28 @@
     "justNow": "방금",
     "minutesAgo": "{count}분 전",
     "hoursAgo": "{count}시간 전",
-    "daysAgo": "{count}일 전"
+    "daysAgo": "{count}일 전",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "새 Claude Code Agent",
+      "subtitle": "Claude Agent SDK 기반",
+      "namePlaceholder": "예: claude-dev, code-reviewer",
+      "rolePlaceholder": "예: 개발자, 리뷰어, 연구원",
+      "modelTier": "모델 티어",
+      "maxTurns": "최대 턴 수",
+      "maxTurnsHint": "호출당 1-200 턴",
+      "budget": "예산 한도",
+      "budgetHint": "호출당 최대 비용",
+      "permissionMode": "권한 모드",
+      "allowedTools": "허용 도구",
+      "allowedToolsHint": "쉼표로 구분된 도구 이름",
+      "systemPrompt": "시스템 프롬프트 (선택)",
+      "systemPromptPlaceholder": "이 에이전트에 대한 사용자 정의 지침...",
+      "summary": "구성 요약",
+      "turns": "턴",
+      "creating": "생성 중...",
+      "create": "Claude Agent 생성"
+    }
   },
   "multiGateway": {
     "title": "게이트웨이 관리자",
@@ -1840,7 +1861,32 @@
     "noAgents": "No agents registered",
     "noAgentsHint": "Sync from config or create your first agent to get started.",
     "wake": "Wake",
-    "spawn": "Spawn"
+    "spawn": "Spawn",
+    "cancel": "취소",
+    "failedToCreate": "에이전트 생성 실패",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "새 Claude Code Agent",
+      "subtitle": "Claude Agent SDK 기반",
+      "name": "이름",
+      "namePlaceholder": "예: claude-dev, code-reviewer",
+      "role": "역할",
+      "rolePlaceholder": "예: 개발자, 리뷰어, 연구원",
+      "modelTier": "모델 티어",
+      "maxTurns": "최대 턴 수",
+      "maxTurnsHint": "호출당 1-200 턴",
+      "budget": "예산 한도",
+      "budgetHint": "호출당 최대 비용",
+      "permissionMode": "권한 모드",
+      "allowedTools": "허용 도구",
+      "allowedToolsHint": "쉼표로 구분된 도구 이름",
+      "systemPrompt": "시스템 프롬프트 (선택)",
+      "systemPromptPlaceholder": "이 에이전트에 대한 사용자 정의 지침...",
+      "summary": "구성 요약",
+      "turns": "턴",
+      "creating": "생성 중...",
+      "create": "Claude Agent 생성"
+    }
   },
   "orchestration": {
     "tabCommand": "명령",

@@ -5,7 +5,7 @@ import { requireRole } from '@/lib/auth'
 import { config } from '@/lib/config'
 import { logger } from '@/lib/logger'
 import { parseGatewayHistoryTranscript, parseJsonlTranscript } from '@/lib/transcript-parser'
-import { callOpenClawGateway } from '@/lib/openclaw-gateway'
+import { getSessionMessages } from '@/lib/agent-sdk'
 
 /**
  * GET /api/sessions/transcript/gateway?key=<session-key>&limit=50
@@ -36,17 +36,13 @@ export async function GET(request: NextRequest) {
 
   try {
     try {
-      const history = await callOpenClawGateway<{ messages?: unknown[] }>(
-        'chat.history',
-        { sessionKey, limit },
-        15000,
-      )
-      const liveMessages = parseGatewayHistoryTranscript(Array.isArray(history?.messages) ? history.messages : [], limit)
-      if (liveMessages.length > 0) {
-        return NextResponse.json({ messages: liveMessages, source: 'gateway-rpc' })
+      const sdkMessages = await getSessionMessages(sessionKey)
+      const parsed = parseGatewayHistoryTranscript(Array.isArray(sdkMessages) ? sdkMessages : [], limit)
+      if (parsed.length > 0) {
+        return NextResponse.json({ messages: parsed, source: 'agent-sdk' })
       }
-    } catch (rpcErr) {
-      logger.warn({ err: rpcErr, sessionKey }, 'Gateway chat.history failed, falling back to disk transcript')
+    } catch (sdkErr) {
+      logger.warn({ err: sdkErr, sessionKey }, 'Agent SDK getSessionMessages failed, falling back to disk transcript')
     }
 
     // Extract agent name from session key (e.g. "agent:jarv:main" -> "jarv")

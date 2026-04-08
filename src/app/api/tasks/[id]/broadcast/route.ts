@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase, db_helpers } from '@/lib/db'
-import { runOpenClaw } from '@/lib/command'
+import { resolveBackendFromConfig } from '@/lib/agent-backend'
 import { requireRole } from '@/lib/auth'
 import { logger } from '@/lib/logger'
 
@@ -42,22 +42,17 @@ export async function POST(
     }
 
     const agents = db
-      .prepare('SELECT name, session_key FROM agents WHERE workspace_id = ? AND name IN (' + Array.from(subscribers).map(() => '?').join(',') + ')')
-      .all(workspaceId, ...Array.from(subscribers)) as Array<{ name: string; session_key?: string }>
+      .prepare('SELECT name, session_key, config FROM agents WHERE workspace_id = ? AND name IN (' + Array.from(subscribers).map(() => '?').join(',') + ')')
+      .all(workspaceId, ...Array.from(subscribers)) as Array<{ name: string; session_key?: string; config?: string }>
 
     const results = await Promise.allSettled(
       agents.map(async (agent) => {
         if (!agent.session_key) return 'skipped'
-        await runOpenClaw(
-          [
-            'gateway',
-            'sessions_send',
-            '--session',
-            agent.session_key,
-            '--message',
-            `[Task ${task.id}] ${task.title}\nFrom ${author}: ${message}`
-          ],
-          { timeoutMs: 10000 }
+        const backend = resolveBackendFromConfig(agent.config)
+        await backend.sendMessage(
+          agent.session_key,
+          `[Task ${task.id}] ${task.title}\nFrom ${author}: ${message}`,
+          { maxTurns: 1, maxBudgetUsd: 0.2 }
         )
         db_helpers.createNotification(
           agent.name,

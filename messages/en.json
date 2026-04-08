@@ -1716,7 +1716,28 @@
     "justNow": "Just now",
     "minutesAgo": "{count}m ago",
     "hoursAgo": "{count}h ago",
-    "daysAgo": "{count}d ago"
+    "daysAgo": "{count}d ago",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "New Claude Code Agent",
+      "subtitle": "Powered by Claude Agent SDK",
+      "namePlaceholder": "e.g., claude-dev, code-reviewer",
+      "rolePlaceholder": "e.g., developer, reviewer, researcher",
+      "modelTier": "Model Tier",
+      "maxTurns": "Max Turns",
+      "maxTurnsHint": "1-200 turns per invocation",
+      "budget": "Budget Limit",
+      "budgetHint": "Max cost per invocation",
+      "permissionMode": "Permission Mode",
+      "allowedTools": "Allowed Tools",
+      "allowedToolsHint": "Comma-separated tool names",
+      "systemPrompt": "System Prompt (Optional)",
+      "systemPromptPlaceholder": "Custom instructions for this agent...",
+      "summary": "Configuration Summary",
+      "turns": "turns",
+      "creating": "Creating...",
+      "create": "Create Claude Agent"
+    }
   },
   "multiGateway": {
     "title": "Gateway Manager",
@@ -1989,7 +2010,32 @@
     "noAgents": "No agents registered",
     "noAgentsHint": "Sync from config or create your first agent to get started.",
     "wake": "Wake",
-    "spawn": "Spawn"
+    "spawn": "Spawn",
+    "cancel": "Cancel",
+    "failedToCreate": "Failed to create agent",
+    "addClaudeAgent": "+ Claude Code Agent",
+    "claudeAgent": {
+      "title": "New Claude Code Agent",
+      "subtitle": "Powered by Claude Agent SDK",
+      "name": "Name",
+      "namePlaceholder": "e.g., claude-dev, code-reviewer",
+      "role": "Role",
+      "rolePlaceholder": "e.g., developer, reviewer, researcher",
+      "modelTier": "Model Tier",
+      "maxTurns": "Max Turns",
+      "maxTurnsHint": "1-200 turns per invocation",
+      "budget": "Budget Limit",
+      "budgetHint": "Max cost per invocation",
+      "permissionMode": "Permission Mode",
+      "allowedTools": "Allowed Tools",
+      "allowedToolsHint": "Comma-separated tool names",
+      "systemPrompt": "System Prompt (Optional)",
+      "systemPromptPlaceholder": "Custom instructions for this agent...",
+      "summary": "Configuration Summary",
+      "turns": "turns",
+      "creating": "Creating...",
+      "create": "Create Claude Agent"
+    }
   },
   "orchestration": {
     "tabCommand": "Command",

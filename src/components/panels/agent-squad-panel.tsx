@@ -49,6 +49,7 @@ export function AgentSquadPanel() {
   const [error, setError] = useState<string | null>(null)
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showClaudeAgentModal, setShowClaudeAgentModal] = useState(false)
   const [autoRefresh, setAutoRefresh] = useState(true)
 
   // Fetch agents
@@ -170,7 +171,14 @@ export function AgentSquadPanel() {
             {autoRefresh ? t('live') : t('manual')}
           </Button>
           <Button
+            onClick={() => setShowClaudeAgentModal(true)}
+            className="bg-amber-600 hover:bg-amber-500 text-white"
+          >
+            {t('addClaudeAgent')}
+          </Button>
+          <Button
             onClick={() => setShowCreateModal(true)}
+            variant="secondary"
           >
             {t('addAgent')}
           </Button>
@@ -318,6 +326,14 @@ export function AgentSquadPanel() {
       {showCreateModal && (
         <CreateAgentModal
           onClose={() => setShowCreateModal(false)}
+          onCreated={fetchAgents}
+        />
+      )}
+
+      {/* Create Claude Code Agent Modal */}
+      {showClaudeAgentModal && (
+        <CreateClaudeAgentModal
+          onClose={() => setShowClaudeAgentModal(false)}
           onCreated={fetchAgents}
         />
       )}
@@ -614,6 +630,265 @@ function CreateAgentModal({
               onClick={onClose}
               variant="secondary"
               className="flex-1"
+            >
+              {t('cancel')}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// Claude Code Agent SDK Modal
+const MODEL_TIERS = [
+  { value: 'light', label: 'Haiku', desc: 'claude-haiku-4-5', color: 'text-green-400' },
+  { value: 'default', label: 'Sonnet', desc: 'claude-sonnet-4-6', color: 'text-blue-400' },
+  { value: 'heavy', label: 'Opus', desc: 'claude-opus-4-6', color: 'text-purple-400' },
+] as const
+
+const PERMISSION_MODES = [
+  { value: 'acceptEdits', label: 'Accept Edits' },
+  { value: 'plan', label: 'Plan Only' },
+  { value: 'bypassPermissions', label: 'Bypass Permissions' },
+] as const
+
+function CreateClaudeAgentModal({
+  onClose,
+  onCreated
+}: {
+  onClose: () => void
+  onCreated: () => void
+}) {
+  const t = useTranslations('agentSquad')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [formData, setFormData] = useState({
+    name: '',
+    role: '',
+    modelTier: 'default' as 'light' | 'default' | 'heavy',
+    maxTurns: 30,
+    maxBudgetUsd: 5.0,
+    permissionMode: 'acceptEdits',
+    systemPrompt: '',
+    allowedTools: 'Read,Edit,Write,Bash,Glob,Grep',
+  })
+
+  const selectedTier = MODEL_TIERS.find(t => t.value === formData.modelTier)!
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setSubmitting(true)
+
+    try {
+      const tools = formData.allowedTools
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+
+      const response = await fetch('/api/agents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          role: formData.role || 'Claude Code Agent',
+          soul_content: formData.systemPrompt || undefined,
+          config: {
+            backend: 'agent-sdk',
+            modelTier: formData.modelTier,
+            maxTurns: formData.maxTurns,
+            maxBudgetUsd: formData.maxBudgetUsd,
+            permissionMode: formData.permissionMode,
+            allowedTools: tools,
+          },
+        })
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || t('failedToCreate'))
+      }
+
+      onCreated()
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('failedToCreate'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const update = <K extends keyof typeof formData>(key: K, value: (typeof formData)[K]) =>
+    setFormData(prev => ({ ...prev, [key]: value }))
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-6">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-lg bg-amber-600/20 border border-amber-500/30 flex items-center justify-center text-lg">
+              C
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white">{t('claudeAgent.title')}</h3>
+              <p className="text-sm text-gray-400">{t('claudeAgent.subtitle')}</p>
+            </div>
+            <Button onClick={onClose} variant="ghost" size="icon-sm" className="ml-auto text-2xl">x</Button>
+          </div>
+
+          {error && (
+            <div className="bg-red-900/20 border border-red-500 text-red-400 text-sm p-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-5">
+            {/* Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">{t('name')}</label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => update('name', e.target.value)}
+                className="w-full bg-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                placeholder={t('claudeAgent.namePlaceholder')}
+                required
+              />
+            </div>
+
+            {/* Role */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">{t('role')}</label>
+              <input
+                type="text"
+                value={formData.role}
+                onChange={(e) => update('role', e.target.value)}
+                className="w-full bg-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                placeholder={t('claudeAgent.rolePlaceholder')}
+              />
+            </div>
+
+            {/* Model Tier */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">{t('claudeAgent.modelTier')}</label>
+              <div className="grid grid-cols-3 gap-2">
+                {MODEL_TIERS.map(tier => (
+                  <button
+                    key={tier.value}
+                    type="button"
+                    onClick={() => update('modelTier', tier.value)}
+                    className={`p-3 rounded-lg border text-left transition-colors ${
+                      formData.modelTier === tier.value
+                        ? 'border-amber-500 bg-amber-500/10'
+                        : 'border-gray-600 bg-gray-700/50 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className={`font-medium ${tier.color}`}>{tier.label}</div>
+                    <div className="text-xs text-gray-400 mt-0.5">{tier.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Max Turns & Budget - side by side */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">{t('claudeAgent.maxTurns')}</label>
+                <input
+                  type="number"
+                  value={formData.maxTurns}
+                  onChange={(e) => update('maxTurns', Math.max(1, Math.min(200, Number(e.target.value) || 1)))}
+                  className="w-full bg-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  min={1}
+                  max={200}
+                />
+                <p className="text-xs text-gray-500 mt-1">{t('claudeAgent.maxTurnsHint')}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">{t('claudeAgent.budget')}</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-400">$</span>
+                  <input
+                    type="number"
+                    value={formData.maxBudgetUsd}
+                    onChange={(e) => update('maxBudgetUsd', Math.max(0.01, Number(e.target.value) || 0.01))}
+                    className="w-full bg-gray-700 text-white rounded pl-7 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    min={0.01}
+                    step={0.5}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">{t('claudeAgent.budgetHint')}</p>
+              </div>
+            </div>
+
+            {/* Permission Mode */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">{t('claudeAgent.permissionMode')}</label>
+              <select
+                value={formData.permissionMode}
+                onChange={(e) => update('permissionMode', e.target.value)}
+                className="w-full bg-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              >
+                {PERMISSION_MODES.map(mode => (
+                  <option key={mode.value} value={mode.value}>{mode.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Allowed Tools */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">{t('claudeAgent.allowedTools')}</label>
+              <input
+                type="text"
+                value={formData.allowedTools}
+                onChange={(e) => update('allowedTools', e.target.value)}
+                className="w-full bg-gray-700 text-white rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">{t('claudeAgent.allowedToolsHint')}</p>
+            </div>
+
+            {/* System Prompt */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">{t('claudeAgent.systemPrompt')}</label>
+              <textarea
+                value={formData.systemPrompt}
+                onChange={(e) => update('systemPrompt', e.target.value)}
+                className="w-full bg-gray-700 text-white rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                rows={3}
+                placeholder={t('claudeAgent.systemPromptPlaceholder')}
+              />
+            </div>
+
+            {/* Summary */}
+            <div className="bg-gray-700/30 rounded-lg p-3 text-sm">
+              <div className="text-gray-400 mb-1">{t('claudeAgent.summary')}</div>
+              <div className="text-gray-300">
+                <span className={selectedTier.color}>{selectedTier.label}</span>
+                {' / '}
+                {formData.maxTurns} {t('claudeAgent.turns')}
+                {' / '}
+                ${formData.maxBudgetUsd.toFixed(2)} USD
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 mt-6">
+            <Button
+              type="submit"
+              className="flex-1 bg-amber-600 hover:bg-amber-500"
+              disabled={submitting}
+            >
+              {submitting ? t('claudeAgent.creating') : t('claudeAgent.create')}
+            </Button>
+            <Button
+              type="button"
+              onClick={onClose}
+              variant="secondary"
+              className="flex-1"
+              disabled={submitting}
             >
               {t('cancel')}
             </Button>

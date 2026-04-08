@@ -19,7 +19,8 @@ import {
   ChannelsTab,
   CronTab,
   ModelsTab,
-  CreateAgentModal
+  CreateAgentModal,
+  CreateClaudeAgentModal
 } from './agent-detail-tabs'
 import { formatModelName, buildTaskStatParts } from '@/lib/agent-card-helpers'
 import { useMissionControl, type Agent } from '@/store'
@@ -100,6 +101,7 @@ export function AgentSquadPanelPhase3() {
   const [error, setError] = useState<string | null>(null)
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showClaudeAgentModal, setShowClaudeAgentModal] = useState(false)
   const [showQuickSpawnModal, setShowQuickSpawnModal] = useState(false)
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [syncing, setSyncing] = useState(false)
@@ -334,6 +336,13 @@ export function AgentSquadPanelPhase3() {
             {t('syncLocal')}
           </Button>
           <Button
+            onClick={() => setShowClaudeAgentModal(true)}
+            size="sm"
+            className="bg-amber-600 hover:bg-amber-500 text-white"
+          >
+            {t('addClaudeAgent')}
+          </Button>
+          <Button
             onClick={() => setShowCreateModal(true)}
             size="sm"
           >
@@ -519,6 +528,14 @@ export function AgentSquadPanelPhase3() {
       {showCreateModal && (
         <CreateAgentModal
           onClose={() => setShowCreateModal(false)}
+          onCreated={fetchAgents}
+        />
+      )}
+
+      {/* Create Claude Code Agent Modal */}
+      {showClaudeAgentModal && (
+        <CreateClaudeAgentModal
+          onClose={() => setShowClaudeAgentModal(false)}
           onCreated={fetchAgents}
         />
       )}
